@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Top 10 Richest Countries - 2007</title>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        svg {
+            display: block;
+            margin: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Top 10 Richest Countries (2007)</h1>
+
+    <svg width="950" height="500"></svg>
+
+    <script>
+        // Margins and dimensions
+        const margin = {
+            top: 30,
+            right: 50,
+            bottom: 60,
+            left: 180
+        };
+
+        const width = 950 - margin.left - margin.right;
+        const height = 500 - margin.top - margin.bottom;
+
+        // Select SVG
+        const svg = d3.select("svg")
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Load dataset
+        d3.csv("dataset/gapminder.csv", d3.autoType)
+            .then(function (data) {
+
+                // Keep only data for 2007
+                data = data.filter(d => d.year === 2007);
+
+                // Sort by GDP per capita and select top 10
+                data = data
+                    .sort((a, b) => d3.descending(a.gdpPercap, b.gdpPercap))
+                    .slice(0, 10);
+
+                // X scale: GDP per capita
+                const x = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => d.gdpPercap)])
+                    .nice()
+                    .range([0, width]);
+
+                // Y scale: country names
+                const y = d3.scaleBand()
+                    .domain(data.map(d => d.country))
+                    .range([0, height])
+                    .padding(0.2);
+
+                // Draw bars
+                svg.selectAll("rect")
+                    .data(data)
+                    .join("rect")
+                    .attr("x", 0)
+                    .attr("y", d => y(d.country))
+                    .attr("width", d => x(d.gdpPercap))
+                    .attr("height", y.bandwidth())
+                    .attr("fill", "steelblue");
+
+                // Country labels
+                svg.append("g")
+                    .call(d3.axisLeft(y));
+
+                // GDP axis
+                svg.append("g")
+                    .attr("transform", `translate(0,${height})`)
+                    .call(d3.axisBottom(x).ticks(5));
+
+                // X-axis label
+                svg.append("text")
+                    .attr("x", width / 2)
+                    .attr("y", height + 45)
+                    .attr("text-anchor", "middle")
+                    .text("GDP per Capita");
+
+            })
+            .catch(function (error) {
+                console.error("Error loading CSV:", error);
+            });
+
+    </script>
+
+</body>
+
+</html>
