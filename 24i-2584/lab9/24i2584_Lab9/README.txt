@@ -4,7 +4,6 @@ FILES
 - index.html: all six visualizations, with tabs.
 - dataset/custom.geo.json: the GeoJSON file uploaded for this lab.
 
-IMPORTANT: The four CSVs shown in the assignment screenshot were not included in the uploaded files. Copy the actual files into the dataset folder with these exact names:
   dataset/university.csv
   dataset/flights.csv
   dataset/population.csv
@@ -28,4 +27,4 @@ NOTES
 - The population join uses a country code matched to GeoJSON properties. The provided GeoJSON has adm0_a3 country codes; population.csv id should use matching codes (for example ISO-3 codes) for the choropleth to color correctly.
 - The map tasks use the supplied custom.geo.json file and expect it to contain world country polygons including Pakistan.
 - This project intentionally does not invent the missing course, flight, population, or city data. All charts read the actual CSV files.
-- Before submission, verify the charts using the actual CSVs and test with Live Server, as required by the lab manual.
+
