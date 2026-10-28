@@ -1,0 +1,13 @@
+source,target,flights
+Karachi,Lahore,70
+Karachi,Islamabad,65
+Karachi,Peshawar,28
+Karachi,Quetta,25
+Karachi,Multan,21
+Karachi,Faisalabad,14
+Karachi,Gwadar,10
+Lahore,Islamabad,20
+Lahore,Quetta,7
+Islamabad,Quetta,10
+Islamabad,Skardu,14
+Islamabad,Sialkot,6
