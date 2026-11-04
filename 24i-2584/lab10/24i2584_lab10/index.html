@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Air Quality 2025 | Data Analysis & Visualization</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <style>
+    :root {
+      --ink:#17221f; --muted:#6f7d77; --paper:#f4f6f2; --card:#ffffff;
+      --line:#e5ebe5; --green:#176b53; --green2:#3b9a78; --lime:#c9df86;
+      --amber:#e9a23b; --red:#cf5c50; --blue:#527fa6; --shadow:0 12px 34px rgba(28,48,39,.055);
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"DM Sans",sans-serif; }
+    .wrap { max-width:1440px; margin:auto; padding:28px 34px 48px; }
+    header { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; margin-bottom:24px; }
+    .eyebrow { color:var(--green); text-transform:uppercase; letter-spacing:.15em; font-size:11px; font-weight:700; }
+    h1 { font:800 clamp(28px,4vw,44px)/1.08 "Manrope",sans-serif; margin:9px 0 8px; letter-spacing:-.04em; }
+    .sub { color:var(--muted); max-width:730px; line-height:1.55; font-size:14px; }
+    .tag { background:#e6efe8; color:var(--green); border:1px solid #d3e3d7; padding:9px 13px; border-radius:99px; font-size:12px; font-weight:700; white-space:nowrap; }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:22px 0; }
+    .stat, .card { background:var(--card); border:1px solid var(--line); border-radius:17px; box-shadow:var(--shadow); }
+    .stat { padding:17px 19px; }
+    .stat .label { color:var(--muted); font-size:12px; font-weight:600; }
+    .stat .value { font:800 27px "Manrope",sans-serif; margin-top:7px; letter-spacing:-.03em; }
+    .stat .hint { color:var(--muted); font-size:11px; margin-top:3px; }
+    .section-title { margin:30px 2px 13px; display:flex; justify-content:space-between; align-items:end; gap:15px; }
+    h2 { font:800 20px "Manrope",sans-serif; margin:0; letter-spacing:-.025em; }
+    .section-title p { margin:5px 0 0; color:var(--muted); font-size:12px; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .card { padding:19px 20px 16px; min-width:0; }
+    .card.wide { grid-column:1/-1; }
+    .card-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:10px; }
+    .card h3 { font:700 15px "Manrope",sans-serif; margin:0; }
+    .card .desc { color:var(--muted); font-size:11px; margin-top:5px; line-height:1.45; }
+    .num { color:#8c9a93; font:700 11px "Manrope",sans-serif; }
+   .card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.chart {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.chart svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: hidden;
+}
+    .axis text { fill:#7c8983; font:10px "DM Sans",sans-serif; }
+    .axis path,.axis line { stroke:#dce4dd; }
+    .gridline line { stroke:#edf1ed; }
+    .gridline path { display:none; }
+    .legend { display:flex; flex-wrap:wrap; gap:12px; color:var(--muted); font-size:11px; margin:8px 0 0 5px; }
+    .key { display:inline-flex; align-items:center; gap:6px; }
+    .swatch { width:9px; height:9px; border-radius:3px; display:inline-block; }
+    .note { background:#f0f5ef; border:1px solid #e0e9df; border-radius:12px; padding:12px 14px; color:#43554b; font-size:12px; line-height:1.55; margin-top:12px; }
+    .note strong { color:var(--ink); }
+    .mini-metrics { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .mini { background:#f5f7f4; border:1px solid #e8ede7; border-radius:9px; padding:7px 9px; font-size:11px; color:#56645d; }
+    .mini b { color:var(--ink); }
+    .tooltip { position:fixed; pointer-events:none; z-index:10; background:#17221f; color:white; padding:8px 10px; border-radius:8px; font-size:11px; line-height:1.5; box-shadow:0 6px 20px #0002; opacity:0; }
+    .brush .selection { fill:#9ac8ae; fill-opacity:.3; stroke:var(--green); }
+    button { border:0; border-radius:9px; background:var(--green); color:white; padding:9px 13px; font:600 11px "DM Sans"; cursor:pointer; }
+    button:hover { background:#10543f; }
+    .director { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .finding { padding:12px 13px; background:#f7f9f6; border:1px solid #e9eee8; border-radius:11px; font-size:12px; line-height:1.5; }
+    .finding b { display:block; margin-bottom:4px; font-size:11px; color:var(--green); text-transform:uppercase; letter-spacing:.06em; }
+    footer { color:#8a968f; font-size:11px; margin-top:26px; text-align:center; line-height:1.6; }
+    @media(max-width:850px){ .wrap{padding:22px 16px 36px}.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.card.wide{grid-column:auto} header{display:block}.tag{display:inline-block;margin-top:12px}.director{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">City Environment Office · 2025 report</div>
+      <h1>Air quality, over time.</h1>
+      <div class="sub">A time-series investigation of daily PM2.5 readings at the city-centre and suburban stations. Use the charts to explore pollution levels, seasonal patterns, unusual days and data gaps.</div>
+    </div>
+    <div class="tag">D3.js · Lab 10</div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="section-title">
+    <div><h2>Explore the data</h2><p>Eight visualizations answering the questions in Lab Manual 10.</p></div>
+  </div>
+
+  <div class="grid">
+    <section class="card wide">
+      <div class="card-head"><div><h3>01 · Daily city-centre PM2.5</h3><div class="desc">Daily readings across 2025, with WHO 24-hour guideline reference lines and the two highest days highlighted.</div></div><span class="num">TASK 2</span></div>
+      <div id="chart1" class="chart"></div><div id="task2metrics" class="mini-metrics"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h3>02 · Cumulative unhealthy days</h3><div class="desc">Running count of days when city-centre PM2.5 was above 75 µg/m³.</div></div><span class="num">TASK 3</span></div>
+      <div id="chart2" class="chart"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h3>03 · City vs suburb</h3><div class="desc">Daily PM2.5 readings for both stations on the same time and value scales.</div></div><span class="num">TASK 4</span></div>
+      <div id="chart3" class="chart"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h3>04 · Monthly pollution composition</h3><div class="desc">Number of recorded days in each PM2.5 category. Each monthly stack totals that month's recorded days.</div></div><span class="num">TASK 5</span></div>
+      <div id="chart4" class="chart"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h3>05 · Month × weekday heatmap</h3><div class="desc">Average city-centre PM2.5 for each month and day-of-week combination.</div></div><span class="num">TASK 6</span></div>
+      <div id="chart5" class="chart"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><div><h3>06 · Monthly spread and mean</h3><div class="desc">Shaded band shows each month's minimum-to-maximum range; line shows the monthly mean.</div></div><span class="num">TASK 7</span></div>
+      <div id="chart6" class="chart"></div>
+    </section>
+
+    <section class="card wide">
+      <div class="card-head"><div><h3>07 · Daily values and 7-day moving average</h3><div class="desc">The moving average uses seven consecutive calendar days. The sensor-offline gap is left visible and the line is broken rather than interpolated.</div></div><span class="num">TASK 8</span></div>
+      <div id="chart7" class="chart"></div>
+      <div id="gapnote" class="note"></div>
+    </section>
+
+    <section class="card wide">
+      <div class="card-head"><div><h3>08 · Select a period to zoom</h3><div class="desc">Drag across the overview chart to zoom the main chart. Select a range to inspect a period; use Reset to return to the full year.</div></div><span class="num">TASK 9</span></div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button id="resetZoom" type="button">Reset full year</button></div>
+      <div id="chart8" class="chart"></div>
+    </section>
+  </div>
+
+  <div class="section-title"><div><h2>Briefing for the Director</h2><p>Automatically calculated observations from the supplied practice dataset.</p></div></div>
+  <section class="card">
+    <div id="director" class="director"></div>
+    <div class="note"><strong>Interpretation note:</strong> This is a practice dataset, not official monitoring data. The WHO values shown are reference lines supplied by the lab manual. These charts support a classroom analysis; they should not be treated as an official public-health warning.</div>
+  </section>
+
+  <footer>FAST School of Computing · Data Analysis and Visualization · Lab Manual 10<br>Built with D3.js v7. Missing dates are preserved as gaps; no readings are invented.</footer>
+</div>
+<div id="tooltip" class="tooltip"></div>
+<script src="script.js"></script>
+</body>
+</html>
